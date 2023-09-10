@@ -1,10 +1,13 @@
+const Contact = require("../models/contactModel");
 const asyncHandler = require('express-async-handler');
+
 // @desc Get all contacts
 // @route GET /api/contacts
 // @access public
 
 const getContacts = asyncHandler(async (req, res) => {
-    res.status(200).json({ message: 'Get All Contacts' });
+    const contacts = await Contact.find();
+    res.status(200).json(contacts);
 })
 
 // @desc Get contact
@@ -12,7 +15,14 @@ const getContacts = asyncHandler(async (req, res) => {
 // @access public
 
 const getContact = asyncHandler(async (req, res) => {
-    res.status(200).json({ message: `Get contact by id ${req.params.id} ` });
+    const contact = await Contact.findById(req.params.id);
+    console.log('1111111', req.params.id)
+    if (!contact) {
+        console.log('Not found')
+        res.status(404);
+        throw new Error('Contact not found')
+    }
+    res.status(200).json(contact);
 })
 
 // @desc create contact
@@ -26,7 +36,14 @@ const createContact = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('All Fields are mandatory');
     }
-    res.status(201).json({ message: 'Create contact' });
+
+    const contact = await Contact.create({
+        name,
+        email,
+        phone
+    });
+
+    res.status(201).json(contact);
 })
 
 // @desc update contact
@@ -34,7 +51,18 @@ const createContact = asyncHandler(async (req, res) => {
 // @access public
 
 const updateContact = asyncHandler(async (req, res) => {
-    res.status(200).json({ message: `update contact by id ${req.params.id}` });
+    const contact = await Contact.findById(req.params.id);
+    if (!contact) {
+        res.status(404);
+        throw new Error('Contact not found')
+    }
+
+    const updatedContact = await Contact.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true }
+    );
+    res.status(200).json(updatedContact);
 })
 
 // @desc  contacts
@@ -42,8 +70,19 @@ const updateContact = asyncHandler(async (req, res) => {
 // @access public
 
 const deleteContact = asyncHandler(async (req, res) => {
-    res.status(200).json({ message: `delete contact by id ${req.params.id}` });
+    const contact = await Contact.findById(req.params.id);
+    if (!contact) {
+        res.status(404);
+        throw new Error('Contact not found')
+    }
+
+    await Contact.remove();
+    res.status(200).json(contact);
 })
 
 
-module.exports = { getContacts, getContact, updateContact, deleteContact, createContact };
+module.exports = { getContacts, 
+    getContact, 
+    updateContact, 
+    deleteContact, 
+    createContact };
